@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+        #movieList {
+            list-style: none;
+            padding: 0;
+        }
+        #movieList li {
+            background-color: white;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .controls input,
+        .controls select,
+        .controls button {
+            padding: 10px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Movie List</h1>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Search for movies..." />
+            <button id="searchButton">Search</button>
+
+            <select id="streamingFilter">
+                <option value="">Select Streaming Service</option>
+                <option value="Netflix">Netflix</option>
+                <option value="HBO Max">HBO Max</option>
+                <option value="Amazon Prime">Amazon Prime</option>
+                <option value="Hulu">Hulu</option>
+            </select>
+
+            <select id="yearFilter">
+                <option value="">Select Year</option>
+                <!-- Options will be added dynamically -->
+            </select>
+
+            <button id="filterButton">Apply Filters</button>
+            <button id="prevButton">Previous</button>
+            <button id="nextButton">Next</button>
+        </div>
+        <ul id="movieList"></ul>
+        <p id="paginationInfo"></p>
+    </div>
+
+    <script>
+        const moviesPerPage = 3;
+        let currentPage = 1;
+        let movies = [];
+        let filteredMovies = [];
+
+        async function fetchData() {
+            try {
+                const response = await fetch('movies.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                movies = await response.json();
+                filteredMovies = movies;
+                populateYearFilter();
+                displayData();
+            } catch (error) {
+                console.error("Error fetching data: ", error);
+            }
+        }
+
+        function populateYearFilter() {
+            const yearFilter = document.getElementById('yearFilter');
+            const years = [...new Set(movies.map(movie => movie.year))].sort();
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.innerText = year;
+                yearFilter.appendChild(option);
+            });
+        }
+
+        function displayData() {
+            const movieList = document.getElementById('movieList');
+            movieList.innerHTML = ''; // Clear the list
+            const start = (currentPage - 1) * moviesPerPage;
+            const end = start + moviesPerPage;
+            const paginatedMovies = filteredMovies.slice(start, end);
+
+            if (paginatedMovies.length > 0) {
+                paginatedMovies.forEach(movie => {
+                    const li = document.createElement('li');
+                    li.innerText = `${movie.title} (${movie.year}) - Available on ${movie.streamingInfo}`;
+                    movieList.appendChild(li);
+                });
+                document.getElementById('paginationInfo').innerText = `Page ${currentPage} of ${Math.ceil(filteredMovies.length / moviesPerPage)}`;
+            } else {
+                movieList.innerText = "No movies found.";
+                document.getElementById('paginationInfo').innerText = '';
+            }
+        }
+
+        function searchMovies() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            filteredMovies = movies.filter(movie =>
+                movie.title.toLowerCase().includes(query)
+            );
+            currentPage = 1;
+            displayData();
+        }
+
+        function applyFilters() {
+            const streamingFilter = document.getElementById('streamingFilter').value;
+            const yearFilter = document.getElementById('yearFilter').value;
+
+            filteredMovies = movies.filter(movie => {
+                return (streamingFilter === '' || movie.streamingInfo === streamingFilter) &&
+                       (yearFilter === '' || movie.year === parseInt(yearFilter));
+            });
+            currentPage = 1;
+            displayData();
+        }
+
+        function paginate(direction) {
+            if (direction === 'next') {
+                if (currentPage * moviesPerPage < filteredMovies.length) {
+                    currentPage++;
+                }
+            } else if (direction === 'prev') {
+                if (currentPage > 1) {
+                    currentPage--;
+                }
+            }
+            displayData();
+        }
+
+        document.getElementById('searchButton').addEventListener('click', searchMovies);
+        document.getElementById('filterButton').addEventListener('click', applyFilters);
+        document.getElementById('prevButton').addEventListener('click', () => paginate('prev'));
+        document.getElementById('nextButton').addEventListener('click', () => paginate('next'));
+
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+[
+    { "title": "Inception", "year": 2010, "streamingInfo": "Netflix" },
+    { "title": "The Matrix", "year": 1999, "streamingInfo": "HBO Max" },
+    { "title": "Interstellar", "year": 2014, "streamingInfo": "Amazon Prime" },
+    { "title": "Parasite", "year": 2019, "streamingInfo": "Hulu" },
+    { "title": "The Dark Knight", "year": 2008, "streamingInfo": "Netflix" },
+    { "title": "Joker", "year": 2019, "streamingInfo": "HBO Max" }
+  ]
+  
